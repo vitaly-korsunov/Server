@@ -1,0 +1,528 @@
+in File appsettings.json
+},
+"AllowedHosts": "*",
+"ConnectionStrings": {
+  "DefaultConnectionString": "server=LAPTOP-I7OKMQKR;database=StudentDB;Trusted_Connection=True;MultipleActiveResultSets=true;User ID=sa;Password=1!Korsunov;Integrated Security=False"
+}
+
+-----------------------------------------------------------------------------------------------------------------
+in file Program.cs
+var AllowSpecificOrigins = "AllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(AllowSpecificOrigins,
+                          policy =>
+                          {
+                              policy.WithOrigins("http://localhost:4200")                 
+                                                  .AllowAnyHeader()
+                                                  .AllowAnyMethod();
+                          });
+});
+
+//var app = builder.Build();  before
+
+app.UseCors(AllowSpecificOrigins);
+-----------------------------------------------------------------------------------------------------------------
+in File StudentControler
+using Microsoft.AspNetCore.Mvc;
+using Servre.Data;
+using Servre.Moduls;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Globalization;
+
+
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
+namespace Servre.Controllers
+{
+    
+    [Route("api/[controller]")]
+    [ApiController]
+    public class StudentsController : ControllerBase
+    {
+        private IConfiguration? Configuration;
+        public StudentsController(IConfiguration _configuration)
+        {
+            Configuration = _configuration;
+        }
+
+        // GET: api/<StudentsController>
+        [HttpGet]
+        public ActionResult<IEnumerable<Student>> Get()
+        {
+            // DataFromDb dataFromDb = new DataFromDb();
+            //  var sdr= dataFromDb.getconnection();
+            //  string connString = this.Configuration.GetConnectionString("DefaultConnectionString");
+          DataSet dataSet =  DataFromDb.GetStudents();
+            var dataTable = dataSet.Tables[0];
+
+            List<Student> students = new List<Student>();
+            
+            for (int I = 0; I < dataTable.Rows.Count; I++)
+            {
+                students.Add(new Student
+                {
+                         Id = int.Parse("0" + dataTable.Rows[I]["Id"].ToString()),
+                         name = dataTable.Rows[I]["name"].ToString() ,
+                         department = dataTable.Rows[I]["department"].ToString(),
+                         bdate = DateTime.Parse(dataTable.Rows[I]["bdate"].ToString()+"").ToString("yyyy-MM-dd"),
+                         level = int.Parse("0" + dataTable.Rows[I]["level"].ToString()),
+                        gender = dataTable.Rows[I]["gender"].ToString(),
+                });
+            }
+
+            return students;
+        }
+
+        // GET api/<StudentsController>/5
+        [HttpGet("{id}")]
+        public string Get(int id)
+        {
+            return "value";
+        }
+
+        // POST api/<StudentsController>
+        [HttpPost]
+        public ActionResult<Student> Post([FromBody] Student value)
+        {
+
+            DataSet dataSet = DataFromDb.CreateStudent(value);
+            var dataTable = dataSet.Tables[0];
+             Student student = new Student();
+            //student.Id = 3;
+            //student.name = value.name;
+            //student.department = value.department;
+            //student.bdate = value.bdate;// DateTime.Now.ToString("yyyy-MM-dd");
+            //student.level = value.level;
+            //student.gender = value.gender;
+
+
+            for (int I = 0; I < dataTable.Rows.Count; I++)
+            {
+                student.Id = int.Parse("0" + dataTable.Rows[I]["Id"].ToString());
+                student.name = dataTable.Rows[I]["name"].ToString();
+                student.department = dataTable.Rows[I]["department"].ToString();
+                student.bdate = DateTime.Parse(dataTable.Rows[I]["bdate"].ToString() + "").ToString("yyyy-MM-dd");
+                student.level = int.Parse("0" + dataTable.Rows[I]["level"].ToString());
+                student.gender = dataTable.Rows[I]["gender"].ToString();
+                
+            }
+
+            return student;
+        }
+
+        // PUT api/<StudentsController>/5
+        [HttpPut("{id}")]
+        public ActionResult<Student> Put(int id, [FromBody] Student value)
+        {
+            DataSet dataSet = DataFromDb.UpdateStudent(value);
+            var dataTable = dataSet.Tables[0];
+            Student student = new Student();
+
+            for (int I = 0; I < dataTable.Rows.Count; I++)
+            {
+                student.Id = int.Parse("0" + dataTable.Rows[I]["Id"].ToString());
+                student.name = dataTable.Rows[I]["name"].ToString();
+                student.department = dataTable.Rows[I]["department"].ToString();
+                student.bdate = DateTime.Parse(dataTable.Rows[I]["bdate"].ToString()+"").ToString("yyyy-MM-dd");
+                student.level = int.Parse("0" + dataTable.Rows[I]["level"].ToString());
+                student.gender = dataTable.Rows[I]["gender"].ToString();
+            }
+            //student.Id = id;
+            //student.name = value.name;
+            //student.department = value.department;
+            //student.bdate = value.bdate;// DateTime.Now.ToString("yyyy-MM-dd");
+            //student.level = value.level;
+            //student.gender = value.gender;
+            return     student;
+        }
+
+        // DELETE api/<StudentsController>/5
+        [HttpDelete("{id}")]
+        public IActionResult Delete(int id)
+        {
+            bool boolVal = DataFromDb.DeleteStudent(id);
+            return NoContent();
+        }
+    }
+}
+
+-----------------------------------------------------------------------------------------------------------------
+In File DepartmentControler
+using Microsoft.AspNetCore.Mvc;
+using Servre.Data;
+using Servre.Moduls;
+using System.Data;
+
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+
+namespace Servre.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class DepartmentsController : ControllerBase
+    {
+        // GET: api/<Departments>
+        [HttpGet]
+        public ActionResult<IEnumerable<Department>> Get()
+        {
+            // DataFromDb dataFromDb = new DataFromDb();
+            //  var sdr= dataFromDb.getconnection();
+            //  string connString = this.Configuration.GetConnectionString("DefaultConnectionString");
+            DataSet dataSet = DataFromDb.GetDepartments();
+            var dataTable = dataSet.Tables[0];
+
+            List<Department> departments = new List<Department>();
+
+            for (int I = 0; I < dataTable.Rows.Count; I++)
+            {
+                departments.Add(new Department
+                {
+                    Id = int.Parse("0" + dataTable.Rows[I]["Id"].ToString()),        
+                    department = dataTable.Rows[I]["department"].ToString() 
+                    
+                });
+            }
+            return departments;
+        }
+
+    }
+}
+-----------------------------------------------------------------------------------------------------------------
+in File DataFromDb
+
+ using Microsoft.Extensions.Configuration;
+using System.Configuration;
+using Microsoft.Extensions.Configuration.Json;
+using Microsoft.Extensions.Options;
+using System.Data;
+using System.Data.SqlClient;
+using Servre.Moduls;
+
+namespace Servre.Data
+{
+    public class DataFromDb
+    {
+        public  static string getconnection()
+        {
+           // var AppName = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build().GetSection("ConnectionStrings")["DefaultConnectionString"];
+            var config = new ConfigurationBuilder()
+             .AddJsonFile("appsettings.json").Build();
+
+            string roundTheCodeSync = config.GetSection("ConnectionStrings")["DefaultConnectionString"];
+
+            return roundTheCodeSync;
+        }
+
+
+        public static DataSet GetStudents()
+        {
+            DataSet dataSet = new DataSet();
+            using (SqlConnection con = new SqlConnection(getconnection()))
+            {
+                con.Open();
+                using(SqlDataAdapter adapter = new SqlDataAdapter())
+                {
+                    DataTable dt = new DataTable("Students");
+                    SqlCommand cmd = con.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "spGetStudents";
+                    cmd.CommandTimeout = 0;
+                    cmd.Connection = con;
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(dataSet);
+                    dataSet.Tables.Add(dt);
+                }
+            }
+            return dataSet;
+        }
+
+        internal static DataSet CreateStudent(Student value)
+        {
+            DataSet dataSet = new DataSet();
+            using (SqlConnection con = new SqlConnection(getconnection()))
+            {
+                con.Open();
+                using (SqlDataAdapter adapter = new SqlDataAdapter())
+                {
+                    DataTable dt = new DataTable("Students");
+                    SqlCommand cmd = con.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "spCreateStudents";
+                    cmd.CommandTimeout = 0;
+                    cmd.Parameters.Add(new SqlParameter("@name", value.name));
+                    cmd.Parameters.Add(new SqlParameter("@department", value.department));
+                    cmd.Parameters.Add(new SqlParameter("@bdate", DateTime.Parse(value.bdate)));
+                    cmd.Parameters.Add(new SqlParameter("@gender", value.gender));
+                    cmd.Parameters.Add(new SqlParameter("@level", value.level));
+                    cmd.Connection = con;
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(dataSet);
+                    dataSet.Tables.Add(dt);
+                }
+            }
+            return dataSet;
+        }
+
+        internal static bool DeleteStudent(int id)
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(getconnection()))
+                {
+                    con.Open();
+                    SqlCommand sqlCommand = new SqlCommand();
+                    sqlCommand.CommandType = CommandType.StoredProcedure;
+                    sqlCommand.CommandText = "spDeleteStudents";
+                    sqlCommand.CommandTimeout = 0;
+                    sqlCommand.Parameters.Add(new SqlParameter("@Id", id));
+                    sqlCommand.Connection = con;
+                    sqlCommand.ExecuteScalar();
+                    return true;
+                }
+            }
+            catch { Exception  ex; }
+            {
+                return true;
+            }
+            
+        }
+
+        internal static DataSet GetDepartments()
+        {
+            DataSet dataSet = new DataSet();
+            using (SqlConnection con = new SqlConnection(getconnection()))
+            {
+                con.Open();
+                using (SqlDataAdapter adapter = new SqlDataAdapter())
+                {
+                    DataTable dt = new DataTable("Students");
+                    SqlCommand cmd = con.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "spGetDepartments";
+                    cmd.CommandTimeout = 0;
+                    cmd.Connection = con;
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(dataSet);
+                    dataSet.Tables.Add(dt);
+                }
+            }
+            return dataSet;
+        }
+
+        internal static DataSet UpdateStudent(Student value)
+        {
+            DataSet dataSet = new DataSet();
+            using (SqlConnection con = new SqlConnection(getconnection()))
+            {
+                con.Open();
+                using (SqlDataAdapter adapter = new SqlDataAdapter())
+                {
+                    DataTable dt = new DataTable("Students");
+                    SqlCommand cmd = con.CreateCommand();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = "spUpdateStudent";
+                    cmd.CommandTimeout = 0;
+                    cmd.Parameters.Add(new SqlParameter("@Id", value.Id));
+                    cmd.Parameters.Add(new SqlParameter("@name", value.name));
+                    cmd.Parameters.Add(new SqlParameter("@department", value.department));
+                    cmd.Parameters.Add(new SqlParameter("@bdate", DateTime.Parse(value.bdate)));
+                    cmd.Parameters.Add(new SqlParameter("@gender", value.gender));
+                    cmd.Parameters.Add(new SqlParameter("@level", value.level));
+                    cmd.Connection = con;
+                    adapter.SelectCommand = cmd;
+                    adapter.Fill(dataSet);
+                    dataSet.Tables.Add(dt);
+                }
+            }
+            return dataSet;
+        }
+    }
+}
+-----------------------------------------------------------------------------------------------------------------
+in File Department.cs
+namespace Servre.Moduls
+{
+    public class Department
+    {
+        public int Id { get; set; }
+        public string? department { get; set; }
+    }
+}
+
+-----------------------------------------------------------------------------------------------------------------
+in File Student.cs
+namespace Servre.Moduls
+{
+    public class Student
+
+    {
+        public int Id { get; set; }
+        public string? name { get; set; }
+        public string? department { get; set; }
+        public string? bdate { get; set; }
+        public string? gender { get; set; }
+        public int level { get; set; }
+    }
+}
+-----------------------------------------------------------------------------------------------------------------
+
+DB
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Departments](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Department] [nvarchar](50) NULL
+) ON [PRIMARY]
+GO
+/****** Object:  Table [dbo].[Students]    Script Date: 17/09/2023 21:21:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[Students](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[name] [nvarchar](50) NULL,
+	[department] [nvarchar](50) NULL,
+	[bdate] [date] NULL,
+	[gender] [nvarchar](50) NULL,
+	[level] [int] NULL
+) ON [PRIMARY]
+GO
+/****** Object:  StoredProcedure [dbo].[spCreateStudents]    Script Date: 17/09/2023 21:21:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ 
+CREATE PROCEDURE [dbo].[spCreateStudents] 
+	       (@name  nvarchar(50) 
+            ,@department  nvarchar(50) 
+           , @bdate  date 
+           , @gender  nvarchar(50) 
+           , @level int )
+AS
+BEGIN
+	 
+	SET NOCOUNT ON;
+
+    INSERT INTO [dbo].[Students]
+           ([name]
+           ,[department]
+           ,[bdate]
+           ,[gender]
+           ,[level])
+     VALUES
+           ( @name   
+           ,@department  
+           , @bdate 
+           , @gender   
+           , @level  )
+ 
+	declare @id int = (select Max(Id) from [dbo].[Students])
+	SELECT [Id]
+      ,[name]
+      ,[department]
+      ,[bdate]
+      ,[gender]
+      ,[level]
+  FROM [dbo].[Students] where Id=@id
+
+END
+GO
+/****** Object:  StoredProcedure [dbo].[spDeleteStudents]    Script Date: 17/09/2023 21:21:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ 
+CREATE PROCEDURE [dbo].[spDeleteStudents]
+(@Id int)
+AS
+BEGIN
+ 
+	SET NOCOUNT ON;
+
+  DELETE FROM [dbo].[Students]
+      WHERE  Id=@Id
+END
+GO
+/****** Object:  StoredProcedure [dbo].[spGetDepartments]    Script Date: 17/09/2023 21:21:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ 
+CREATE PROCEDURE  [dbo].[spGetDepartments]
+AS
+BEGIN
+ 
+	SET NOCOUNT ON;
+   SELECT [Id]
+      ,[Department]
+  FROM [dbo].[Departments]
+END
+GO
+/****** Object:  StoredProcedure [dbo].[spGetStudents]    Script Date: 17/09/2023 21:21:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ 
+CREATE PROCEDURE [dbo].[spGetStudents]
+AS
+BEGIN
+	 
+	SET NOCOUNT ON;
+
+    SELECT [Id]
+      ,[name]
+      ,[department]
+      ,[bdate]
+      ,[gender]
+      ,[level]
+  FROM [dbo].[Students]
+END
+GO
+/****** Object:  StoredProcedure [dbo].[spUpdateStudent]    Script Date: 17/09/2023 21:21:35 ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ 
+CREATE PROCEDURE  [dbo].[spUpdateStudent]
+ 
+     (@id int,
+	         @name  nvarchar(50) 
+            ,@department  nvarchar(50) 
+           , @bdate  date 
+           , @gender  nvarchar(50) 
+           , @level int )
+ 
+AS
+BEGIN
+	 
+	SET NOCOUNT ON;
+	UPDATE [dbo].[Students]
+   SET [name] = @name
+      ,[department] = @department 
+      ,[bdate] = @bdate 
+      ,[gender] = @gender 
+      ,[level] = @level 
+ WHERE Id=@Id
+ 
+ 
+ 	SELECT [Id]
+      ,[name]
+      ,[department]
+      ,[bdate]
+      ,[gender]
+      ,[level]
+  FROM [dbo].[Students] where Id=@id
+END
+-----------------------------------------------------------------------------------------------------------------
